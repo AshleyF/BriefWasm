@@ -39,7 +39,7 @@ Binary arithmetic operations consume two values from the stack and produce a sin
 | --- | --- |
 | `+` | `i32¦i64¦f32¦f64.add` |
 | `-` | `i32¦i64¦f32¦f64.sub` |
-| `*` | `i32¦i64|f32¦f64.mul` |
+| `*` | `i32¦i64¦f32¦f64.mul` |
 | `/` | `i32¦i64¦f32¦f64.div_s` |
 | `u/` | `i32¦i64.div_u` |
 | `rem` | `i32¦i64.rem_s` |
