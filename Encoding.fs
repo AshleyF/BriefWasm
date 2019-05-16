@@ -293,6 +293,7 @@ let rec instructions inst = seq { // TODO: test
         | ReinterpretF64asI64 -> seq { yield 0xbduy }
         | ReinterpretI32asF32 -> seq { yield 0xbeuy }
         | ReinterpretI64asF64 -> seq { yield 0xbfuy }
+        | Dependencies _ -> Seq.empty
 
     yield! Seq.map bytes inst |> Seq.concat }
 

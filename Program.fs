@@ -10,12 +10,15 @@ testAll ()
 
 printfn "Building module..."
 
+let funcType, funcBody, globals = word Map.empty "glob@ 0 drop arg@ 0 123 + loc! 1 3 4 + 5 * loc@ 1 +" 
+
 let bytes =
     wasm [
-        Type [{ Parameters = []; Returns = Some Value.I32 }]
+        Type [funcType]
         Function [0]
+        Global [{ Value = Value.I32; Mutable = false; Init = [ConstI32 123; End]}]
         Export [{ Field = "main"; Kind = ExternalKind.Function; Index = 0 }]
-        Code [{ Locals = []; Code = brief "3 4 + 5 *" |> print }]
+        Code [funcBody]
     ]
 
 save bytes

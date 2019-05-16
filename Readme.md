@@ -3,9 +3,9 @@
 
 This is a work in progress to generate WebAssembly binaries with Brief.
 
-The [`.wat` format](http://webassembly.github.io/spec/core/text/index.html) is nice. Indeed, Lisp is my second favorite language family. First is Forth, of which BriefWasm is a dialect.
+The [`.wat` format](http://webassembly.github.io/spec/core/text/index.html) is nice. Indeed, Lisp is my second favorite language family. First is Forth, of which Brief is a dialect.
 
-The BriefWasm code fragment `2 3 + 4 *` replaces:
+The Brief code fragment `2 3 + 4 *` replaces:
 
 ```
 i32.const 2
@@ -37,24 +37,24 @@ Binary arithmetic operations consume two values from the stack and produce a sin
 
 | Brief | Compiled |
 | --- | --- |
-| `+` | `[i32|i64|f32|f64].add` |
-| `-` | `[i32|i64|f32|f64].sub` |
-| `*` | `[i32|i64|f32|f64].mul` |
-| `/` | `[i32|i64|f32|f64].div_s` |
-| `u/` | `[i32|i64].div_u` |
-| `rem` | `[i32|i64].rem_s` |
-| `urem` | `[i32|i64].rem_u` |
-| `and` | `[i32|i64].and` |
-| `or` | `[i32|i64].or` |
-| `xor` | `[i32|i64].xor` |
-| `shl` | `[i32|i64].shl` |
-| `shr` | `[i32|i64].shr_s` |
-| `ushr` | `[i32|i64].ushr_u` |
-| `rotl` | `[i32|i64].rotl` |
-| `rotr` | `[i32|i64].rotr` |
-| `min` | `[f32|f64].min` |
-| `max` | `[f32|f64].max` |
-| `copysign` | `[f32|f64].copysign` |
+| `+` | `i32|i64|f32|f64.add` |
+| `-` | `i32|i64|f32|f64.sub` |
+| `*` | `i32|i64|f32|f64.mul` |
+| `/` | `i32|i64|f32|f64.div_s` |
+| `u/` | `i32|i64.div_u` |
+| `rem` | `i32|i64.rem_s` |
+| `urem` | `i32|i64.rem_u` |
+| `and` | `i32|i64.and` |
+| `or` | `i32|i64.or` |
+| `xor` | `i32|i64.xor` |
+| `shl` | `i32|i64.shl` |
+| `shr` | `i32|i64.shr_s` |
+| `ushr` | `i32|i64.ushr_u` |
+| `rotl` | `i32|i64.rotl` |
+| `rotr` | `i32|i64.rotr` |
+| `min` | `f32|f64.min` |
+| `max` | `f32|f64.max` |
+| `copysign` | `f32|f64.copysign` |
 
 The types are inferred by the state of the stack. Notice that some operators only apply to integer argument and some only to floating point.
 
@@ -64,16 +64,16 @@ Additional unary arithmetic operators consuming and producing a _single_ stack v
 
 | Brief | Compiled |
 | --- | --- |
-| `abs` | `[f32|f64].abs` |
-| `neg` | `[f32|f64].neg` |
-| `sqrt` | `[f32|f64].sqrt` |
-| `ceil` | `[f32|f64].ceil` |
-| `floor` | `[f32|f64].floor` |
-| `trunc` | `[f32|f64].trunc` |
-| `nearest` | `[f32|f64].nearest` |
-| `clz` | `[i32|i64].clz` |
-| `ctz` | `[i32|i64].ctz` |
-| `popcnt` | `[i32|i64].popcnt` |
+| `abs` | `f32|f64.abs` |
+| `neg` | `f32|f64.neg` |
+| `sqrt` | `f32|f64.sqrt` |
+| `ceil` | `f32|f64.ceil` |
+| `floor` | `f32|f64.floor` |
+| `trunc` | `f32|f64.trunc` |
+| `nearest` | `f32|f64.nearest` |
+| `clz` | `i32|i64.clz` |
+| `ctz` | `i32|i64.ctz` |
+| `popcnt` | `i32|i64.popcnt` |
 
 ## Comparison
 
@@ -81,16 +81,16 @@ Comparison operators consume two values (of matching types) and produce a singe 
 
 | Brief | Compiled |
 | --- | --- |
-| `=` | `[i32|f32|f32|f64].eq` |
-| `<>` | `[i32|f32|f32|f64].ne` |
-| `<` | `[i32|f32|f32|f64].lt_s` |
-| `u<` | `[i32|f32].lt_u` |
-| `>` | `[i32|f32|f32|f64].gt_s` |
-| `u>` | `[i32|f32].gt_u` |
-| `<=` | `[i32|f32|f32|f64].le_s` |
-| `u<=` | `[i32|f32].le_u` |
-| `>=` | `[i32|f32|f32|f64].ge_s` |
-| `u>=` | `[i32|f32].ge_u` |
+| `=` | `i32|f32|f32|f64.eq` |
+| `<>` | `i32|f32|f32|f64.ne` |
+| `<` | `i32|f32|f32|f64.lt_s` |
+| `u<` | `i32|f32.lt_u` |
+| `>` | `i32|f32|f32|f64.gt_s` |
+| `u>` | `i32|f32.gt_u` |
+| `<=` | `i32|f32|f32|f64.le_s` |
+| `u<=` | `i32|f32.le_u` |
+| `>=` | `i32|f32|f32|f64.ge_s` |
+| `u>=` | `i32|f32.ge_u` |
 
 Finally, a unary zero-comparison operation:
 
@@ -137,48 +137,75 @@ The following words fetch (`@`) and store (`!`) values (`i32`, `i64`, `f32`, `f6
 
 | Brief | Compiled |
 | --- | --- |
-| `@i32 <o> <a>` | `i32.load <offset> <align>`
-| `@i64 <o> <a>` | `i64.load <offset> <align>`
-| `@f32 <o> <a>` | `f32.load <offset> <align>`
-| `@f64 <o> <a>` | `f64.load <offset> <align>`
-| `8@i32 <o> <a>` | `i32.load8_s <offset> <align>`
-| `u8@i32 <o> <a>` | `i32.load8_u <offset> <align>`
-| `8@i64 <o> <a>` | `i64.load8_s <offset> <align>`
-| `u8@i64 <o> <a>` | `i64.load8_u <offset> <align>`
-| `16@i32 <o> <a>` | `i32.load16_s <offset> <align>`
-| `u16@i32 <o> <a>` | `i32.load16_u <offset> <align>`
-| `16@i64 <o> <a>` | `i64.load16_s <offset> <align>`
-| `u16@i64 <o> <a>` | `i64.load16_u <offset> <align>`
-| `32@i64 <o> <a>` | `i64.load32_s <offset> <align>`
-| `u32@i64 <o> <a>` | `i64.load32_u <offset> <align>`
-| `!i32 <o> <a>` | `i32.store <offset> <align>`
-| `!i64 <o> <a>` | `i64.store <offset> <align>`
-| `!f32 <o> <a>` | `f32.store <offset> <align>`
-| `!f64 <o> <a>` | `f64.store <offset> <align>`
-| `8!i32 <o> <a>` | `i32.store8 <offset> <align>`
-| `8!i64 <o> <a>` | `i64.store8 <offset> <align>`
-| `16!i32 <o> <a>` | `i32.store16 <offset> <align>`
-| `16!i64 <o> <a>` | `i64.store16 <offset> <align>`
-| `32!i64 <o> <a>` | `i64.store32 <offset> <align>`
+| `@ <o> <a>` | `i32.load <offset> <align>` |
+| `@i64 <o> <a>` | `i64.load <offset> <align>` |
+| `@f32 <o> <a>` | `f32.load <offset> <align>` |
+| `@f64 <o> <a>` | `f64.load <offset> <align>` |
+| `8@ <o> <a>` | `i32.load8_s <offset> <align>` |
+| `u8@ <o> <a>` | `i32.load8_u <offset> <align>` |
+| `8@i64 <o> <a>` | `i64.load8_s <offset> <align>` |
+| `u8@i64 <o> <a>` | `i64.load8_u <offset> <align>` |
+| `16@ <o> <a>` | `i32.load16_s <offset> <align>` |
+| `u16@ <o> <a>` | `i32.load16_u <offset> <align>` |
+| `16@i64 <o> <a>` | `i64.load16_s <offset> <align>` |
+| `u16@i64 <o> <a>` | `i64.load16_u <offset> <align>` |
+| `32@i64 <o> <a>` | `i64.load32_s <offset> <align>` |
+| `u32@i64 <o> <a>` | `i64.load32_u <offset> <align>` |
+| `! <o> <a>` | `i32.store <offset> <align>` |
+| `!i64 <o> <a>` | `i64.store <offset> <align>` |
+| `!f32 <o> <a>` | `f32.store <offset> <align>` |
+| `!f64 <o> <a>` | `f64.store <offset> <align>` |
+| `8! <o> <a>` | `i32.store8 <offset> <align>` |
+| `8!i64 <o> <a>` | `i64.store8 <offset> <align>` |
+| `16! <o> <a>` | `i32.store16 <offset> <align>` |
+| `16!i64 <o> <a>` | `i64.store16 <offset> <align>` |
+| `32!i64 <o> <a>` | `i64.store32 <offset> <align>` |
 
 Additionally, the current memory size may be retrieved or changed (growing returns the previous size or `-1` if allocation fails):
 
 | Brief | Compiled |
 | --- | --- |
-| `memsize` | `memory.size`
-| `memgrow` | `memory.grow`
+| `memsize` | `memory.size` |
+| `memgrow` | `memory.grow` |
 
 ## Variables
 
-TODO
+The following words get and set arguments, locals and globals. Notice that many produce identical instructions. Internally the type annotations and `arg` vs. `loc` designation are used for inference and other bookkeeping.
 
 | Brief | Compiled |
-| --- | --- |
-| `` | `local.get <idx>`
-| `` | `local.set <idx>`
-| `` | `local.tee <idx>`
-| `` | `global.get <idx>`
-| `` | `global.set <idx>`
+| --- | --- | --- |
+| `arg@ <idx>` | `local.get <idx>` |
+| `arg@i64 <idx>` | `local.get <idx>` |
+| `arg@f32 <idx>` | `local.get <idx>` |
+| `arg@f64 <idx>` | `local.get <idx>` |
+| `loc@ <idx>` | `local.get <idx>` |
+| `loc@i64 <idx>` | `local.get <idx>` |
+| `loc@f32 <idx>` | `local.get <idx>` |
+| `loc@f64 <idx>` | `local.get <idx>` |
+| `arg! <idx>` | `local.set <idx>` |
+| `arg!i64 <idx>` | `local.set <idx>` |
+| `arg!f32 <idx>` | `local.set <idx>` |
+| `arg!f64 <idx>` | `local.set <idx>` |
+| `loc! <idx>` | `local.set <idx>` |
+| `loc!i64 <idx>` | `local.set <idx>` |
+| `loc!f32 <idx>` | `local.set <idx>` |
+| `loc!f64 <idx>` | `local.set <idx>` |
+| `arg!@ <idx>` | `local.tee <idx>` |
+| `arg!@i64 <idx>` | `local.tee <idx>` |
+| `arg!@f32 <idx>` | `local.tee <idx>` |
+| `arg!@f64 <idx>` | `local.tee <idx>` |
+| `loc!@ <idx>` | `local.tee <idx>` |
+| `loc!@i64 <idx>` | `local.tee <idx>` |
+| `loc!@f32 <idx>` | `local.tee <idx>` |
+| `loc!@f64 <idx>` | `local.tee <idx>` |
+| `glob@ <idx>` | `global.get <idx>` |
+| `glob@i64 <idx>` | `global.get <idx>` |
+| `glob@f32 <idx>` | `global.get <idx>` |
+| `glob@f64 <idx>` | `global.get <idx>` |
+| `glob! <idx>` | `global.set <idx>` |
+| `glob!i64 <idx>` | `global.set <idx>` |
+| `glob!f32 <idx>` | `global.set <idx>` |
+| `glob!f64 <idx>` | `global.set <idx>` |
 
 ## Control
 
@@ -197,6 +224,13 @@ TODO
 | `` | `return` |
 | `` | `call <func>` |
 | `` | `call_indirect <type>` |
+
+## Reference
+
+* [WebAssembly Spec (1.0)](https://webassembly.github.io/spec/core/_download/WebAssembly.pdf)
+* [WebAssembly Studio](https://webassembly.studio/)
+* [WebAssembly Explorer](https://mbebenita.github.io/WasmExplorer/)
+* [Bolero: F# in WebAssembly](https://fsbolero.io/)
 
 ## TODO
 

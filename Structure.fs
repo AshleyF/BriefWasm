@@ -214,6 +214,8 @@ type Instruction = // using int rather than uint32 throughout for convenience
     | ReinterpretF64asI64 // i64.reinterpret_f64
     | ReinterpretI32asF32 // f32.reinterpret_i32
     | ReinterpretI64asF64 // f64.reinterpret_i64
+    // special "instruction" containing accumulated args/locals/globals information
+    | Dependencies of Map<int, Value> * Map<int, Value> * Map<int, Value> * Value option
 
 type GlobalVariable = {
     Value: Value

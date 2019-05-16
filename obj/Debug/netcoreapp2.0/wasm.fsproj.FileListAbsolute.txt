@@ -1,0 +1,11 @@
+D:\source\briefwasm\bin\Debug\netcoreapp2.0\wasm.html
+D:\source\briefwasm\bin\Debug\netcoreapp2.0\wasm.deps.json
+D:\source\briefwasm\bin\Debug\netcoreapp2.0\wasm.runtimeconfig.json
+D:\source\briefwasm\bin\Debug\netcoreapp2.0\wasm.runtimeconfig.dev.json
+D:\source\briefwasm\bin\Debug\netcoreapp2.0\wasm.dll
+D:\source\briefwasm\bin\Debug\netcoreapp2.0\wasm.pdb
+D:\source\briefwasm\obj\Debug\netcoreapp2.0\wasm.AssemblyInfoInputs.cache
+D:\source\briefwasm\obj\Debug\netcoreapp2.0\wasm.AssemblyInfo.fs
+D:\source\briefwasm\obj\Debug\netcoreapp2.0\wasm.dll
+D:\source\briefwasm\obj\Debug\netcoreapp2.0\wasm.pdb
+D:\source\briefwasm\obj\Debug\netcoreapp2.0\wasm.fsprojAssemblyReference.cache

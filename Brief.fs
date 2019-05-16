@@ -1,11 +1,13 @@
 ﻿module Brief
 
+open System
 open Structure
 
-let brief (source : string) =
+let compile globals (source : string) =
     let pop = function _ :: stack -> stack | _ -> failwith "Stack underflow"
     let push v stack = v :: stack
-    let rec compile stack (words : string list) = seq {
+    let rec compile' args locals globals stack (words : string list) = seq {
+        let compile'' = compile' args locals globals
         let un (i32, i64, f32, f64) =
             let op =
                 match stack with
@@ -26,38 +28,51 @@ let brief (source : string) =
             if op <> Nop then op else failwith (sprintf "Invalid stack at '%s' word (stack: %A)" words.Head stack)
         let unop ops = seq {
             yield un ops
-            yield! compile (stack |> pop |> push stack.Head) words.Tail }
+            yield! compile'' (stack |> pop |> push stack.Head) words.Tail }
         let binop ops = seq {
             yield bin ops
-            yield! compile (stack |> pop |> pop |> push stack.Head) words.Tail }
+            yield! compile'' (stack |> pop |> pop |> push stack.Head) words.Tail }
         let uncomp ops = seq {
             yield un ops
-            yield! compile (stack |> pop |> push I32) words.Tail }
+            yield! compile'' (stack |> pop |> push I32) words.Tail }
         let bincomp ops = seq {
             yield bin ops
-            yield! compile (stack |> pop |> pop |> push I32) words.Tail }
+            yield! compile'' (stack |> pop |> pop |> push I32) words.Tail }
         let convert t ops = seq {
             yield un ops
-            yield! compile (stack |> pop |> push t) words.Tail }
+            yield! compile'' (stack |> pop |> push t) words.Tail }
         let select = seq {
             yield Select
             let stack' =
                 match stack with
                 | t0 :: t1 :: _ :: stack' when t0 = t1 -> t0 :: stack'
                 | _ -> failwith (sprintf "Invalid stack at '%s' word (stack: %A)" words.Head stack)
-            yield! compile stack' words.Tail }
+            yield! compile'' stack' words.Tail }
         let load t op = seq {
             match words with
             | _ :: offset :: align :: words' ->
                 yield op (int offset, int align)
-                yield! compile (t :: (pop stack)) words'
+                yield! compile'' (t :: (pop stack)) words'
             | _ -> failwith (sprintf "Syntax error at '%s' word" words.Head) }
         let store op = seq {
             match words with
             | _ :: offset :: align :: words' ->
                 yield op (int offset, int align)
-                yield! compile (pop stack) words'
+                yield! compile'' (pop stack) words'
             | _ -> failwith (sprintf "Syntax error at '%s' word" words.Head) }
+        let addType i t m =
+            match Map.tryFind i m with
+            | Some t' -> if t' <> t then failwith "Inconsistent type usage" else m
+            | None -> Map.add i t m
+        let getArg i t words = seq { yield GetLocal i; yield! compile' (addType i t args) locals globals (t :: stack) words }
+        let setArg i t words = seq { yield SetLocal i; yield! compile' (addType i t args) locals globals (pop stack) words }
+        let teeArg i t words = seq { yield TeeLocal i; yield! compile' (addType i t args) locals globals (pop stack) words }
+        let getLocal i t words = seq { yield GetLocal i; yield! compile' args (addType i t locals) globals (t :: stack) words }
+        let setLocal i t words = seq { yield SetLocal i; yield! compile' args (addType i t locals) globals (pop stack) words }
+        let teeLocal i t words = seq { yield TeeLocal i; yield! compile' args (addType i t locals) globals (pop stack) words }
+        let getGlobal i t words = seq { yield GetGlobal i; yield! compile' args locals (addType i t globals) (t :: stack) words }
+        let setGlobal i t words = seq { yield SetGlobal i; yield! compile' args locals (addType i t globals) (pop stack) words }
+        let (|Index|_|) x = match Int32.TryParse(x) with true, i -> Some i | false, _ -> None
         match words with
         | "+" :: _ -> yield! binop (AddI32, AddI64, AddF32, AddF64)
         | "-" :: _ -> yield! binop (SubI32, SubI64, SubF32, SubF64)
@@ -110,33 +125,65 @@ let brief (source : string) =
         | ">>i64" :: _ -> yield! convert I64 (Nop, Nop, Nop, ReinterpretF64asI64)
         | ">>f32" :: _ -> yield! convert I64 (ReinterpretI32asF32, Nop, Nop, Nop)
         | ">>f64" :: _ -> yield! convert I64 (Nop, ReinterpretI64asF64, Nop, Nop)
-        | "drop" :: words -> yield Drop; yield! compile (pop stack) words
+        | "drop" :: words -> yield Drop; yield! compile'' (pop stack) words
         | "select" :: _ -> yield! select
-        | "@>i32" :: _ -> yield! load I32 LoadI32
-        | "@>i64" :: _ -> yield! load I64 LoadI64
-        | "@>f32" :: _ -> yield! load F32 LoadF32
-        | "@>f64" :: _ -> yield! load F64 LoadF64
-        | "8@>i32" :: _ -> yield! load I32 LoadByteI32
-        | "u8@>i32" :: _ -> yield! load I32 LoadByteUnsignedI32
-        | "8@>i64" :: _ -> yield! load I64 LoadByteI64
-        | "u8@>i64" :: _ -> yield! load I64 LoadByteUnsignedI64
-        | "16@>i32" :: _ -> yield! load I32 LoadShortI32
-        | "u16@>i32" :: _ -> yield! load I32 LoadShortUnsignedI32
-        | "16@>i64" :: _ -> yield! load I64 LoadShortI64
-        | "u16@>i64" :: _ -> yield! load I64 LoadShortUnsignedI64
-        | "32@>i64" :: _ -> yield! load I64 LoadIntI64
-        | "u32@>i64" :: _ -> yield! load I64 LoadIntUnsignedI64
-        | "!i32" :: _ -> yield! store StoreI32
+        | "@" :: _ -> yield! load I32 LoadI32
+        | "@i64" :: _ -> yield! load I64 LoadI64
+        | "@f32" :: _ -> yield! load F32 LoadF32
+        | "@f64" :: _ -> yield! load F64 LoadF64
+        | "8@" :: _ -> yield! load I32 LoadByteI32
+        | "u8@" :: _ -> yield! load I32 LoadByteUnsignedI32
+        | "8@i64" :: _ -> yield! load I64 LoadByteI64
+        | "u8@i64" :: _ -> yield! load I64 LoadByteUnsignedI64
+        | "16@" :: _ -> yield! load I32 LoadShortI32
+        | "u16@" :: _ -> yield! load I32 LoadShortUnsignedI32
+        | "16@i64" :: _ -> yield! load I64 LoadShortI64
+        | "u16@i64" :: _ -> yield! load I64 LoadShortUnsignedI64
+        | "32@i64" :: _ -> yield! load I64 LoadIntI64
+        | "u32@i64" :: _ -> yield! load I64 LoadIntUnsignedI64
+        | "!" :: _ -> yield! store StoreI32
         | "!i64" :: _ -> yield! store StoreI64
         | "!f32" :: _ -> yield! store StoreF32
         | "!f64" :: _ -> yield! store StoreF64
-        | "8!i32" :: _ -> yield! store StoreByteI32
+        | "8!" :: _ -> yield! store StoreByteI32
         | "8!i64" :: _ -> yield! store StoreByteI64
-        | "16!i32" :: _ -> yield! store StoreShortI32
+        | "16!" :: _ -> yield! store StoreShortI32
         | "16!i64" :: _ -> yield! store StoreShortI64
         | "32!i64" :: _ -> yield! store StoreIntI64
-        | "memsize" :: words -> yield CurrentMemory; yield! compile (I32 :: stack) words
-        | "memgrow" :: words -> yield GrowMemory; yield! compile (I32 :: (pop stack)) words
+        | "memsize" :: words -> yield CurrentMemory; yield! compile'' (I32 :: stack) words
+        | "memgrow" :: words -> yield GrowMemory; yield! compile'' (I32 :: (pop stack)) words
+        | "arg@" :: Index i :: words -> yield! getArg i Value.I32 words
+        | "arg@i64" :: Index i :: words -> yield! getArg i Value.I64 words
+        | "arg@f32" :: Index i :: words -> yield! getArg i Value.F32 words
+        | "arg@f64" :: Index i :: words -> yield! getArg i Value.F64 words
+        | "arg!" :: Index i :: words -> yield! setArg i Value.I32 words
+        | "arg!i64" :: Index i :: words -> yield! setArg i Value.I64 words
+        | "arg!f32" :: Index i :: words -> yield! setArg i Value.F32 words
+        | "arg!f64" :: Index i :: words -> yield! setArg i Value.F64 words
+        | "arg!@" :: Index i :: words -> yield! teeArg i Value.I32 words
+        | "arg!@i64" :: Index i :: words -> yield! teeArg i Value.I64 words
+        | "arg!@f32" :: Index i :: words -> yield! teeArg i Value.F32 words
+        | "arg!@f64" :: Index i :: words -> yield! teeArg i Value.F64 words
+        | "loc@" :: Index i :: words -> yield! getLocal i Value.I32 words
+        | "loc@i64" :: Index i :: words -> yield! getLocal i Value.I64 words
+        | "loc@f32" :: Index i :: words -> yield! getLocal i Value.F32 words
+        | "loc@f64" :: Index i :: words -> yield! getLocal i Value.F64 words
+        | "loc!" :: Index i :: words -> yield! setLocal i Value.I32 words
+        | "loc!i64" :: Index i :: words -> yield! setLocal i Value.I64 words
+        | "loc!f32" :: Index i :: words -> yield! setLocal i Value.F32 words
+        | "loc!f64" :: Index i :: words -> yield! setLocal i Value.F64 words
+        | "loc!@" :: Index i :: words -> yield! teeLocal i Value.I32 words
+        | "loc!@i64" :: Index i :: words -> yield! teeLocal i Value.I64 words
+        | "loc!@f32" :: Index i :: words -> yield! teeLocal i Value.F32 words
+        | "loc!@f64" :: Index i :: words -> yield! teeLocal i Value.F64 words
+        | "glob@" :: Index i :: words -> yield! getGlobal i Value.I32 words
+        | "glob@i64" :: Index i :: words -> yield! getGlobal i Value.I64 words
+        | "glob@f32" :: Index i :: words -> yield! getGlobal i Value.F32 words
+        | "glob@f64" :: Index i :: words -> yield! getGlobal i Value.F64 words
+        | "glob!" :: Index i :: words -> yield! setGlobal i Value.I32 words
+        | "glob!i64" :: Index i :: words -> yield! setGlobal i Value.I64 words
+        | "glob!f32" :: Index i :: words -> yield! setGlobal i Value.F32 words
+        | "glob!f64" :: Index i :: words -> yield! setGlobal i Value.F64 words
         | num :: words -> // literal constants
             let parse n =
                 let pre (n : string) = n.Substring(0, n.Length - 1)
@@ -149,13 +196,29 @@ let brief (source : string) =
                         else num |> int32 |> ConstI32, I32 // 123 (10000000000 fails)
                 with _ -> failwith (sprintf "Unknown word '%s'" n)
             let n, t = parse num
-            yield n; yield! compile (stack |> push t) words
+            yield n; yield! compile'' (stack |> push t) words
         | [] ->
-            if stack.Length > 1 then failwith "Multiple return values unsupported"
             yield End
+            let returns = match stack with | [r] -> Some r | [] -> None | _ -> failwith "Multiple return values unsupported"
+            yield Dependencies (args, locals, globals, returns)
     }
-    source.Split(' ') |> Array.toList |> compile []
+    source.Split(' ') |> Array.toList |> compile' Map.empty Map.empty globals []
 
-let print code =
-    code |> List.ofSeq |> printfn "CODE: %A"
-    code
+let word globals source =
+    match source |> compile globals |> List.ofSeq |> List.partition (function Dependencies _ -> true | _ -> false) with
+    | ([Dependencies (args, locals, globals, returns)], code) ->
+        printfn "Args: %A" args
+        printfn "Locals: %A" locals
+        printfn "Globals: %A" globals
+        printfn "Returns: %A" returns
+        printfn "Code: %A" code
+        let locals =
+            let count t = Seq.append args locals |> Seq.filter (fun kv -> kv.Value = t) |> Seq.length
+            let entry t = match count t with 0 -> [] | n -> [{ Number = n; Type = t }]
+            entry Value.I32 @ entry Value.I64 @ entry Value.F32 @ entry Value.F64
+        let funcType = { Parameters = args |> Map.toSeq |> Seq.sortBy fst |> Seq.map snd |> List.ofSeq; Returns = returns }
+        let funcBody = { Locals = locals; Code = code }
+        printfn "Type: %A" funcType
+        printfn "Body: %A" funcBody
+        funcType, funcBody, globals
+    | _ -> failwith "Malformed compiler result"
