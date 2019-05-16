@@ -37,24 +37,24 @@ Binary arithmetic operations consume two values from the stack and produce a sin
 
 | Brief | Compiled |
 | --- | --- |
-| `+` | `i32|i64|f32|f64.add` |
-| `-` | `i32|i64|f32|f64.sub` |
-| `*` | `i32|i64|f32|f64.mul` |
-| `/` | `i32|i64|f32|f64.div_s` |
-| `u/` | `i32|i64.div_u` |
-| `rem` | `i32|i64.rem_s` |
-| `urem` | `i32|i64.rem_u` |
-| `and` | `i32|i64.and` |
-| `or` | `i32|i64.or` |
-| `xor` | `i32|i64.xor` |
-| `shl` | `i32|i64.shl` |
-| `shr` | `i32|i64.shr_s` |
-| `ushr` | `i32|i64.ushr_u` |
-| `rotl` | `i32|i64.rotl` |
-| `rotr` | `i32|i64.rotr` |
-| `min` | `f32|f64.min` |
-| `max` | `f32|f64.max` |
-| `copysign` | `f32|f64.copysign` |
+| `+` | `i32¦i64¦f32¦f64.add` |
+| `-` | `i32¦i64¦f32¦f64.sub` |
+| `*` | `i32¦i64|f32¦f64.mul` |
+| `/` | `i32¦i64¦f32¦f64.div_s` |
+| `u/` | `i32¦i64.div_u` |
+| `rem` | `i32¦i64.rem_s` |
+| `urem` | `i32¦i64.rem_u` |
+| `and` | `i32¦i64.and` |
+| `or` | `i32¦i64.or` |
+| `xor` | `i32¦i64.xor` |
+| `shl` | `i32¦i64.shl` |
+| `shr` | `i32¦i64.shr_s` |
+| `ushr` | `i32¦i64.ushr_u` |
+| `rotl` | `i32¦i64.rotl` |
+| `rotr` | `i32¦i64.rotr` |
+| `min` | `f32¦f64.min` |
+| `max` | `f32¦f64.max` |
+| `copysign` | `f32¦f64.copysign` |
 
 The types are inferred by the state of the stack. Notice that some operators only apply to integer argument and some only to floating point.
 
@@ -64,16 +64,16 @@ Additional unary arithmetic operators consuming and producing a _single_ stack v
 
 | Brief | Compiled |
 | --- | --- |
-| `abs` | `f32|f64.abs` |
-| `neg` | `f32|f64.neg` |
-| `sqrt` | `f32|f64.sqrt` |
-| `ceil` | `f32|f64.ceil` |
-| `floor` | `f32|f64.floor` |
-| `trunc` | `f32|f64.trunc` |
-| `nearest` | `f32|f64.nearest` |
-| `clz` | `i32|i64.clz` |
-| `ctz` | `i32|i64.ctz` |
-| `popcnt` | `i32|i64.popcnt` |
+| `abs` | `f32¦f64.abs` |
+| `neg` | `f32¦f64.neg` |
+| `sqrt` | `f32¦f64.sqrt` |
+| `ceil` | `f32¦f64.ceil` |
+| `floor` | `f32¦f64.floor` |
+| `trunc` | `f32¦f64.trunc` |
+| `nearest` | `f32¦f64.nearest` |
+| `clz` | `i32¦i64.clz` |
+| `ctz` | `i32¦i64.ctz` |
+| `popcnt` | `i32¦i64.popcnt` |
 
 ## Comparison
 
@@ -81,22 +81,22 @@ Comparison operators consume two values (of matching types) and produce a singe 
 
 | Brief | Compiled |
 | --- | --- |
-| `=` | `i32|f32|f32|f64.eq` |
-| `<>` | `i32|f32|f32|f64.ne` |
-| `<` | `i32|f32|f32|f64.lt_s` |
-| `u<` | `i32|f32.lt_u` |
-| `>` | `i32|f32|f32|f64.gt_s` |
-| `u>` | `i32|f32.gt_u` |
-| `<=` | `i32|f32|f32|f64.le_s` |
-| `u<=` | `i32|f32.le_u` |
-| `>=` | `i32|f32|f32|f64.ge_s` |
-| `u>=` | `i32|f32.ge_u` |
+| `=` | `i32¦f32¦f32¦f64.eq` |
+| `<>` | `i32¦f32|f32¦f64.ne` |
+| `<` | `i32¦f32¦f32¦f64.lt_s` |
+| `u<` | `i32¦f32.lt_u` |
+| `>` | `i32¦f32¦f32¦f64.gt_s` |
+| `u>` | `i32¦f32.gt_u` |
+| `<=` | `i32¦f32¦f32¦f64.le_s` |
+| `u<=` | `i32¦f32.le_u` |
+| `>=` | `i32¦f32¦f32¦f64.ge_s` |
+| `u>=` | `i32¦f32.ge_u` |
 
 Finally, a unary zero-comparison operation:
 
 | Brief | Compiled |
 | --- | --- |
-| `0=` | `[f32|f64].eqz` |
+| `0=` | `f32¦f64.eqz` |
 
 ## Conversion
 
@@ -173,7 +173,7 @@ Additionally, the current memory size may be retrieved or changed (growing retur
 The following words get and set arguments, locals and globals. Notice that many produce identical instructions. Internally the type annotations and `arg` vs. `loc` designation are used for inference and other bookkeeping.
 
 | Brief | Compiled |
-| --- | --- | --- |
+| --- | --- |
 | `arg@ <idx>` | `local.get <idx>` |
 | `arg@i64 <idx>` | `local.get <idx>` |
 | `arg@f32 <idx>` | `local.get <idx>` |
